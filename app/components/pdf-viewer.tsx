@@ -362,40 +362,60 @@ export function PdfViewer({ file }: PdfViewerProps) {
     }, [pdfPage, viewportSettings]);
 
     return (
-        <div className="relative w-full overflow-auto bg-zinc-100/50 p-4 border border-zinc-200 rounded-xl shadow-inner flex flex-col items-center min-h-[500px] gap-8">
+        <div className="relative w-full overflow-hidden bg-zinc-50 border border-zinc-200 rounded-xl shadow-sm flex flex-col items-center">
             {viewportSettings && (
-                <div className="flex flex-col xl:flex-row items-start justify-center gap-8 w-full max-w-full">
-                    <div className="flex flex-col items-center gap-3 w-full xl:w-1/2">
-                        <h4 className="font-bold text-zinc-700">원본 문서</h4>
-                        <div className="relative bg-white shadow-xl max-w-full" style={{ width: viewportSettings.width, height: viewportSettings.height, margin: '0 auto' }}>
-                            <canvas ref={originalCanvasRef} className="block" style={{ width: "100%", height: "auto" }} />
-                        </div>
+                <div className="flex flex-col w-full">
+                    {/* Header Controls */}
+                    <div className="flex w-full items-center justify-between p-4 bg-white border-b border-zinc-200 shadow-sm z-10">
+                        <h3 className="font-semibold text-zinc-800 flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-zinc-500" /> 문서 비교 뷰어
+                        </h3>
+                        <button
+                            onClick={handleDownloadPdf}
+                            disabled={isGeneratingPdf || isTranslating}
+                            className="flex items-center gap-2 px-5 py-2 text-sm bg-red-500 hover:bg-red-600 active:scale-95 text-white rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm"
+                        >
+                            {isGeneratingPdf ? <><Loader2 className="w-4 h-4 animate-spin" /> 생성 중...</> : <><Download className="w-4 h-4" /> 문장 다운로드</>}
+                        </button>
                     </div>
-                    <div className="flex flex-col items-center gap-3 w-full xl:w-1/2">
-                        <div className="flex flex-wrap items-center justify-between w-full px-1">
-                            <h4 className="font-bold text-red-500 whitespace-nowrap">번역 문서</h4>
-                            <button
-                                onClick={handleDownloadPdf}
-                                disabled={isGeneratingPdf || isTranslating}
-                                className="flex items-center gap-2 px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-md active:scale-95"
-                            >
-                                {isGeneratingPdf ? <><Loader2 className="w-4 h-4 animate-spin" /> 생성 중...</> : <><Download className="w-4 h-4" /> 문서 다운로드</>}
-                            </button>
+
+                    {/* Side-by-side Canvas Scroll Container */}
+                    <div className="flex flex-col xl:flex-row w-full h-[70vh] min-h-[500px] overflow-auto gap-4 p-4 bg-zinc-100/50">
+
+                        {/* Left: Original */}
+                        <div className="flex flex-col items-center flex-1 shrink-0">
+                            <div className="w-full flex justify-between items-center mb-2 px-2">
+                                <h4 className="font-medium text-xs text-zinc-500 uppercase tracking-wider">Original Document</h4>
+                            </div>
+                            <div className="relative bg-white shadow-sm ring-1 ring-zinc-200/50" style={{ width: viewportSettings.width, height: viewportSettings.height, margin: '0 auto' }}>
+                                <canvas ref={originalCanvasRef} className="block w-full h-auto" />
+                            </div>
                         </div>
-                        <div ref={translatedContainerRef} className="relative bg-white shadow-xl max-w-full" style={{ width: viewportSettings.width, height: viewportSettings.height, margin: '0 auto' }}>
-                            <canvas ref={translatedCanvasRef} className="block" style={{ width: "100%", height: "auto" }} />
-                            {isTranslating && (
-                                <div className="absolute inset-0 bg-white/30 backdrop-blur-[2px] flex items-center justify-center z-10">
-                                    <div className="bg-white/90 px-6 py-3 rounded-full shadow-lg border border-red-100 flex items-center gap-3 animate-pulse">
-                                        <div className="w-4 h-4 rounded-full bg-red-500 animate-bounce" />
-                                        <span className="text-red-600 font-bold tracking-tight">Antigravity 정밀 번역 중...</span>
+
+                        {/* Divider */}
+                        <div className="hidden xl:flex w-px bg-zinc-200 h-full mx-2" />
+
+                        {/* Right: Translated */}
+                        <div className="flex flex-col items-center flex-1 shrink-0">
+                            <div className="w-full flex justify-between items-center mb-2 px-2">
+                                <h4 className="font-medium text-xs text-red-500 uppercase tracking-wider">Translated Document</h4>
+                            </div>
+                            <div ref={translatedContainerRef} className="relative bg-white shadow-sm ring-1 ring-red-100/50" style={{ width: viewportSettings.width, height: viewportSettings.height, margin: '0 auto' }}>
+                                <canvas ref={translatedCanvasRef} className="block w-full h-auto" />
+                                {isTranslating && (
+                                    <div className="absolute inset-0 bg-white/40 backdrop-blur-sm flex items-center justify-center z-10 transition-all">
+                                        <div className="bg-white px-6 py-4 rounded-xl shadow-lg border border-red-100 flex items-center gap-3 animate-pulse">
+                                            <div className="w-5 h-5 rounded-full border-t-2 border-red-500 animate-spin" />
+                                            <span className="text-zinc-800 font-medium text-sm">레이아웃 맵핑 엔진 가동 중...</span>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
+
             {!viewportSettings && (
                 <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-4">
                     <div className="w-8 h-8 rounded-full border-4 border-zinc-200 border-t-red-500 animate-spin" />
@@ -403,22 +423,30 @@ export function PdfViewer({ file }: PdfViewerProps) {
                 </div>
             )}
             {viewportSettings && textItems.length > 0 && (
-                <div className="w-full max-w-7xl px-4 pb-8">
-                    <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-                        <div className="p-6">
-                            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-zinc-800 border-b border-zinc-100 pb-4">
-                                <FileText className="w-5 h-5 text-red-500" />
-                                텍스트 데이터 (한국어 번역 결과)
-                            </h3>
-                            <div className="space-y-3">
+                <div className="w-full bg-white border-t border-zinc-200">
+                    <div className="p-4 bg-zinc-50 border-b border-zinc-100 flex items-center">
+                        <h3 className="text-sm font-semibold text-zinc-700 flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-zinc-400" />
+                            Raw Data Mapper
+                        </h3>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto w-full">
+                        <table className="w-full text-left border-collapse text-xs">
+                            <thead className="bg-zinc-50/50 sticky top-0 z-10 backdrop-blur-md">
+                                <tr>
+                                    <th className="px-4 py-2 font-medium text-zinc-500 border-b border-zinc-200 w-1/2">Original Bounding Box</th>
+                                    <th className="px-4 py-2 font-medium text-zinc-500 border-b border-zinc-200 w-1/2">Translated String</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-100">
                                 {textItems.map((item) => (
-                                    <div key={`preview-${item.id}`} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 hover:bg-zinc-50 rounded-lg transition-colors items-start">
-                                        <p className="text-sm text-zinc-500 leading-relaxed break-words border-l-2 border-zinc-200 pl-3">{item.originalText}</p>
-                                        <p className="text-sm font-medium text-zinc-900 leading-relaxed break-words border-l-2 border-red-200 pl-3">{item.translatedText || item.str}</p>
-                                    </div>
+                                    <tr key={`preview-${item.id}`} className="hover:bg-zinc-50/50 transition-colors">
+                                        <td className="px-4 py-3 align-top text-zinc-600 font-mono whitespace-pre-wrap leading-relaxed">{item.originalText}</td>
+                                        <td className="px-4 py-3 align-top text-zinc-900 leading-relaxed break-words">{item.translatedText || item.str}</td>
+                                    </tr>
                                 ))}
-                            </div>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}
